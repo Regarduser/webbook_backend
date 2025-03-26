@@ -8,7 +8,7 @@ const addBook = catchAsyncErrors(async(req, res, next)=>{
     if(!title || !author || !description || !price || !quantity){
         return next(new Errorhandle("please fill all fields", 400))
     }
-    const book = await Book.create({title , author, description, price, quantity});
+    const book = await Book.create({title , author, description, price,  quantity});
     res.status(201).json({
         success : true,
         message : "book added successfully",

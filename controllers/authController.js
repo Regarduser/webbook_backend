@@ -90,7 +90,7 @@ const verifyOTP = catchAsyncErrors(async(req, res, next)=>{
         user.verificationCodeExpire = null
         await user.save({validateModifiedOnly : true})
 
-        sendToken(user, 200, "Account Verified.", res, req);
+        sendToken(user, 200, "Account Verified.", res);
         
     } catch (error) {
         return next(new Errorhandle("internal server error.", 500))
@@ -114,17 +114,13 @@ const login = catchAsyncErrors(async(req, res, next)=>{
     if(!isPasswordMatched){
         return next(new Errorhandle("invaild email or password ", 400))
     }
-    sendToken(user, 200, "user login successfully!", res, req)
+    sendToken(user, 200, "user login successfully!", res)
 })
 
 const logout = catchAsyncErrors(async(req, res, next)=>{
-    const isLocalhost = req.headers.origin && req.headers.origin.includes("localhost");
     res.status(200).cookie("token", "",{
-        expires: new Date(0),
+        expires: new Date(Date.now()),
         httpOnly : true,
-        secure: !isLocalhost,  
-        sameSite: isLocalhost ? "Lax" : "None", 
-        path: "/"               
     }).json({
         success : true,
         message : "logout successfully !"

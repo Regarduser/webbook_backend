@@ -4,7 +4,7 @@ const User = require('../models/userModels');
 const {sendEmail} = require('../utils/sendEmail')
 
 const notifyUsers = ()=>{
-    cron.schedule("* * * */10 * *", async()=>{
+    cron.schedule("*/10 * * * * *", async()=>{
         try {
             const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000) 
             const borrowers = await Borrow.find({

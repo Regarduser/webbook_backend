@@ -10,6 +10,10 @@ const { calculateFine } = require("../utils/fineCalculater");
 const recordBorrowedBooks = catchAsyncErrors(async(req, res ,next)=>{
     const {id} = req.params;
     const {email} = req.body;
+    if (!id) {
+        return next(new Errorhandle("Book ID is required", 400));
+    }
+    
     if (!mongoose.Types.ObjectId.isValid(id)) {
         return next(new Errorhandle("Invalid book ID format", 400));
     }
@@ -27,7 +31,7 @@ const recordBorrowedBooks = catchAsyncErrors(async(req, res ,next)=>{
     }
     const isAlreadyBorrowed = user.borrowedBooks.find(b=>b.bookId.toString() === id && b.returned === false)
     if(isAlreadyBorrowed){
-       return next(new Errorhandle("Book already borrowed.",400)) 
+       return next(new Errorhandle("Book already saved.",400)) 
     }
     book.quantity -= 1
     book.availability = book.quantity > 0;
@@ -36,6 +40,8 @@ const recordBorrowedBooks = catchAsyncErrors(async(req, res ,next)=>{
     user.borrowedBooks.push({
         bookId : book._id,
         bookTitle : book.title,
+        bookAuthor : book.author,
+        bookDescription: book.description,
         borrowedDate : new Date(),
         dueDate : new Date(Date.now() + 7*24*60*60*1000), 
         returned : false

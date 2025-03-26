@@ -22,7 +22,13 @@ require("dotenv").config();
 // console.log("REFRESH_TOKEN:", process.env.REFRESH_TOKEN || "❌ Missing");
 // console.log("FRONTED_URL:", process.env.FRONTEND_URL || "❌ Missing");
 
-
+app.use((err, req, res, next) => {
+    console.error("🔥 ERROR:", err); // ✅ Print full error details
+    res.status(err.statusCode || 500).json({
+        success: false,
+        message: err.message || "Internal Server Error",
+    });
+});
 
 app.use(cors({
     origin : [process.env.FRONTEND_URL],
