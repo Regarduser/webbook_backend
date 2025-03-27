@@ -1,5 +1,5 @@
 const { catchAsyncErrors } = require("../middleware/catchAsyncErrors");
-const {Errorhandle} = require('../middleware/errorMiddlewares');
+const {Errorhandle, errorMiddleware} = require('../middleware/errorMiddlewares');
 const User = require('../models/userModels');
 const bcrypt = require('bcrypt')
 const { v2 : cloudinary} = require('cloudinary')
@@ -64,4 +64,59 @@ const registerNewAdmin = catchAsyncErrors(async(req, res, next)=>{
 })
 
 
-module.exports = { getAllUsers, registerNewAdmin}
+
+const updateAvatar = catchAsyncErrors(async (req, res, next) => {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+        return next(new Errorhandle("User not found", 404));
+    }
+
+    if (!req.files || !req.files.avatar) {
+        return next(new Errorhandle("Please upload an avatar", 400));
+    }
+
+    const { avatar } = req.files;
+    const allowedFormats = ["image/png", "image/jpeg", "image/webp"];
+    if (!allowedFormats.includes(avatar.mimetype)) {
+        return next(new Errorhandle("File format not supported", 400));
+    }
+
+    // Delete previous avatar from Cloudinary (if exists)
+    if (user.avatar && user.avatar.public_id) {
+        await cloudinary.uploader.destroy(user.avatar.public_id);
+    }
+
+    // Upload new avatar to Cloudinary
+    let cloudinaryResponse;
+    try {
+        cloudinaryResponse = await cloudinary.uploader.upload(avatar.tempFilePath, {
+            folder: "Book_lab_avatar",
+        });
+
+        if (!cloudinaryResponse || !cloudinaryResponse.secure_url) {
+            throw new Error("Cloudinary upload failed");
+        }
+    } catch (error) {
+        console.error("Cloudinary upload error:", error);
+        return next(new Errorhandle("Failed to upload avatar", 500));
+    }
+
+    // Update user avatar details in DB
+    user.avatar = {
+        public_id: cloudinaryResponse.public_id,
+        url: cloudinaryResponse.secure_url,
+    };
+    await user.save();
+
+    res.status(200).json({
+        success: true,
+        message: "Avatar updated successfully",
+        avatar: user.avatar,
+    });
+});
+
+
+
+
+
+module.exports = { getAllUsers, registerNewAdmin, updateAvatar}

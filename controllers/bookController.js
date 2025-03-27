@@ -2,13 +2,43 @@ const { catchAsyncErrors } = require('../middleware/catchAsyncErrors')
 const { User } = require('../models/userModels')
 const { Book  } = require('../models/bookModels')
 const {Errorhandle} = require('../middleware/errorMiddlewares')
+const { v2 : cloudinary} = require('cloudinary')
 
 const addBook = catchAsyncErrors(async(req, res, next)=>{
-    const {title , author, description, price, quantity} = req.body;
-    if(!title || !author || !description || !price || !quantity){
+    if(!req.files || Object.keys(req.files).length === 0){
+        return next(new Errorhandle("Book img is required.", 400))
+    }
+    const {title , author, description, source} = req.body;
+    if(!title || !author || !description || !source){
         return next(new Errorhandle("please fill all fields", 400))
     }
-    const book = await Book.create({title , author, description, price,  quantity});
+    const {bookcover} = req.files;
+        const allowedFormates = ["image/png", "image/jpeg", "image/webp"]
+        if(!allowedFormates.includes(bookcover.mimetype)){
+            return next(new Errorhandle("File formate not supported", 400))
+        }
+        let cloudinaryResponse;
+        try {
+            cloudinaryResponse = await cloudinary.uploader.upload(bookcover.tempFilePath, {
+                folder: "Book_lab_cover"
+            });
+        } catch (error) {
+            console.error("Cloudinary upload error:", error);
+            return next(new Errorhandle("Failed to upload img to Cloudinary", 500));
+        }
+        // console.log(cloudinaryResponse) 
+        if(!cloudinaryResponse || cloudinaryResponse.error){
+            console.error("cloudinary error", cloudinaryResponse.error || "unknown cloudinary error")
+            return next(new Errorhandle("Failed to upload avatar to cloudinary", 500))
+        }
+
+    const book = await Book.create({title , author, description,
+        bookcover : {
+        public_id : cloudinaryResponse.public_id,
+        url : cloudinaryResponse.secure_url
+    },source
+    
+});
     res.status(201).json({
         success : true,
         message : "book added successfully",

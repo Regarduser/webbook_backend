@@ -18,21 +18,14 @@ const bookSchema = new mongoose.Schema({
         required : true,
         trim : true
     },
-
-    price :{
-        type : Number,
-        required : true,
+    bookcover : {
+        public_id : String,
+        url : String,
     },
-
-    quantity : {
-        type : Number,
-        required : true,
-    },
-
-    availability : {
-        type : Boolean,
-        default : true,
-    },
+    source : {
+        type : String,
+        url : String,
+    }
 }, {timestamps : true},
 )
 

@@ -16,10 +16,6 @@ const borrowSchema = new mongoose.Schema({
             required : true
         },
     },
-    price : {
-        type : Number,
-        required : true
-    },
 
     book : {
         type : mongoose.Schema.Types.ObjectId,
@@ -37,6 +33,10 @@ const borrowSchema = new mongoose.Schema({
     returnDate : {
         type : Date,
         default : null
+    },
+    bookurl : {
+        type : String,
+        url : String,
     },
     fine : {
         type : Number,

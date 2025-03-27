@@ -28,6 +28,10 @@ const userSchema = new mongoose.Schema({
         type : Boolean,
         default : false,
     },
+    isBanned : {
+        type : Boolean,
+        default : false,
+    },
     borrowedBooks : [
         {
         bookId : {
@@ -40,7 +44,9 @@ const userSchema = new mongoose.Schema({
         },
         bookTitle : String,
         borrowedDate : Date,
+        bookurl : String,
         dueDate : Date,
+
     },
     ],
     avatar : {

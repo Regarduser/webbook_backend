@@ -33,19 +33,21 @@ const recordBorrowedBooks = catchAsyncErrors(async(req, res ,next)=>{
     if(isAlreadyBorrowed){
        return next(new Errorhandle("Book already saved.",400)) 
     }
-    book.quantity -= 1
-    book.availability = book.quantity > 0;
+    
     await book.save();
+    
 
     user.borrowedBooks.push({
         bookId : book._id,
         bookTitle : book.title,
         bookAuthor : book.author,
         bookDescription: book.description,
+        bookurl : book.source,
         borrowedDate : new Date(),
         dueDate : new Date(Date.now() + 7*24*60*60*1000), 
-        returned : false
+        returned : false,
     });
+    console.log(book.source)
     await user.save()
     await Borrow.create({
         user : {
@@ -55,11 +57,12 @@ const recordBorrowedBooks = catchAsyncErrors(async(req, res ,next)=>{
         },
         book : book._id,
         dueDate : new Date(Date.now() + 7*24*60*60*1000),
-        price : book.price
+        bookurl : book.source
+        
     });
     res.status(200).json({
         success : true,
-        message : "Borrowed book recorded successfully"
+        message : "book save successfully"
     })
  })
  const returnBorrowedBook = catchAsyncErrors(async(req, res ,next)=>{
@@ -84,12 +87,11 @@ if (!mongoose.Types.ObjectId.isValid(bookId)) {
     }
    const borrowedBook = user.borrowedBooks.find(b=>b.bookId.toString() === bookId && b.returned === false)
     if(!borrowedBook){
-        return next(new Errorhandle("you have not borrowed this book", 400))
+        return next(new Errorhandle("you have not save this book", 400))
     }
     borrowedBook.returned = true;
     await user.save();
-    book.quantity+=1
-    book.availability = book.quantity > 0
+   
     await book.save()
 
     const borrow = await Borrow.findOne({
@@ -98,15 +100,14 @@ if (!mongoose.Types.ObjectId.isValid(bookId)) {
         returned : null,
     })
     if(!borrow){
-        return next(new Errorhandle("you have not borrowed this book", 400))
+        return next(new Errorhandle("you have not save this book", 400))
     }
     borrow.returnDate = new Date()
-    const fine = calculateFine(borrow.dueDate);
-    borrow.fine = fine
+  
     await borrow.save()
     res.status(200).json({
         success : true,
-        message : fine === 0? `The book has been returned successfully. The total charges, including a fine are ${fine + book.price} ` : `The book has been returned successfully. The total charges are ${book.price} `
+        message : "book removed from save!"
     })
  })
 

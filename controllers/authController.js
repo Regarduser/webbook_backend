@@ -106,8 +106,12 @@ const login = catchAsyncErrors(async(req, res, next)=>{
 
     const user = await User.findOne({email, accountVerified : true}).select("+password");
     if(!user){
-        return next(new Errorhandle("User is not verified ", 400))
+        return next(new Errorhandle("User is not registered ", 400))
     }
+    if (user.isBanned) {
+        return next(new Errorhandle("Your account has been banned. Contact support.", 403 ));
+      }
+  
     
     const isPasswordMatched = await bcrypt.compare(password, user.password);
 
@@ -148,6 +152,9 @@ const forgotpassword = catchAsyncErrors(async(req, res, next)=>{
     if(!user){
         return next(new Errorhandle("Invaild Email. ",400))
     }
+    if (user.isBanned) {
+        return next(new Errorhandle("Your account has been banned. Contact support.", 403 ));
+      }
     const resetPasswordToken = user.getResetPasswordToken();
 
     await user.save({validateBeforeSave : false});
@@ -243,6 +250,38 @@ const updatePassword = catchAsyncErrors(async(req, res, next) => {
     })
 })
 
+const deleteUser = catchAsyncErrors(async(req, res, next)=>{
+    const {email} = req.params;
+    const user = await User.findOne({email});
+    if(!user){
+        return next(new Errorhandle("User not found", 400))
+    }
+    await user.deleteOne();
+    res.status(200).json({
+        success : true,
+        message : "User deleted successfully.",
+    })
+})
+
+const banUser = catchAsyncErrors(async(req, res, next)=>{
+    try{
+    const {email} = req.params;
+    const user = await User.findOne({email});
+    if(!user){
+        return next(new Errorhandle("User not found", 400))
+    }
+    user.isBanned = !user.isBanned;
+    await user.save()
+    res.json({
+        message : `User ${user.isBanned ? "banned" : "unbanned"} Successfully`,
+        user
+    })
+}
+catch(error){
+    res.status(500).json({message : "Internal Server error"})
+}
+})
+
 module.exports = {
     register,
     verifyOTP,
@@ -251,6 +290,8 @@ module.exports = {
     getuser,
     forgotpassword,
     resetPassword,
-    updatePassword
+    updatePassword,
+    deleteUser,
+    banUser
 };
 
