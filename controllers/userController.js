@@ -40,7 +40,7 @@ const registerNewAdmin = catchAsyncErrors(async(req, res, next)=>{
         });
     } catch (error) {
         console.error("Cloudinary upload error:", error);
-        return next(new ErrorHandle("Failed to upload avatar to Cloudinary", 500));
+        return next(new Errorhandle("Failed to upload avatar to Cloudinary", 500));
     }
     // console.log(cloudinaryResponse) 
     if(!cloudinaryResponse || cloudinaryResponse.error){
@@ -72,7 +72,7 @@ const updateAvatar = catchAsyncErrors(async (req, res, next) => {
     }
 
     if (!req.files || !req.files.avatar) {
-        return next(new Errorhandle("Please upload an avatar", 400));
+        return next(new Errorhandle("Please upload an img", 400));
     }
 
     const { avatar } = req.files;
@@ -98,7 +98,7 @@ const updateAvatar = catchAsyncErrors(async (req, res, next) => {
         }
     } catch (error) {
         console.error("Cloudinary upload error:", error);
-        return next(new Errorhandle("Failed to upload avatar", 500));
+        return next(new Errorhandle("Failed to upload img", 500));
     }
 
     // Update user avatar details in DB
@@ -110,7 +110,7 @@ const updateAvatar = catchAsyncErrors(async (req, res, next) => {
 
     res.status(200).json({
         success: true,
-        message: "Avatar updated successfully",
+        message: "Profile updated successfully",
         avatar: user.avatar,
     });
 });
